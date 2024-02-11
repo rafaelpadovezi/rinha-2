@@ -2,20 +2,20 @@
 
 namespace Rinha;
 
-public class ExtratoDto
+public record ExtratoDto
 {
     public SaldoDto Saldo { get; set; }
     public List<TransacaoDto> UltimasTransacoes { get; set; }
 }
 
-public class SaldoDto
+public record SaldoDto
 {
     public int Total { get; set; }
     public DateTime DataExtrato { get; set; } = DateTime.Now;
     public int Limite { get; set; }
 }
 
-public class TransacaoDto
+public record TransacaoDto
 {
     public int Valor { get; set; }
     public char Tipo { get; set; }
@@ -23,7 +23,7 @@ public class TransacaoDto
     public DateTime RealizadoEm { get; set; }
 }
 
-public class TransacaoRequestDto
+public record struct TransacaoRequestDto
 {
     [Range(1, int.MaxValue)]
     public int Valor { get; set; }
@@ -31,5 +31,5 @@ public class TransacaoRequestDto
     public char Tipo { get; set; }
     [Required]
     [MaxLength(10)]
-    public string Descricao { get; set; } = "";
+    public string Descricao { get; set; }
 }

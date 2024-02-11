@@ -2,7 +2,7 @@
 
 namespace Rinha;
 
-public class Cliente
+public record Cliente
 {
     public int Id { get; set; }
     public int Limite { get; set; }
@@ -10,7 +10,7 @@ public class Cliente
     public List<Transacao> Transacoes { get; set; } = [];
 }
 
-public class Transacao
+public record Transacao
 {
     public int Id { get; set; }
     public int Valor { get; set; }

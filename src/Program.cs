@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Rinha;
+using Rinha.CompiledModels;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpLogging(o =>
@@ -28,9 +29,11 @@ builder.Services.AddControllers()
             return new UnprocessableEntityObjectResult(problemDetails);
         };
     });
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddDbContextPool<AppDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("AppDbContext"));
+    options.EnableThreadSafetyChecks(false);
+    options.UseModel(AppDbContextModel.Instance);
 });
 
 var app = builder.Build();
