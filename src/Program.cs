@@ -34,6 +34,7 @@ builder.Services.AddDbContextPool<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("AppDbContext"));
     options.EnableThreadSafetyChecks(false);
     options.UseModel(AppDbContextModel.Instance);
+    options.EnableSensitiveDataLogging();
 });
 
 var app = builder.Build();

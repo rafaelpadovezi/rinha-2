@@ -35,11 +35,17 @@ public class ClienteController : ControllerBase
                 .Take(10)
                 .Select(x => new TransacaoDto
                 {
-                    Valor = x.Tipo == 'c' ? x.Valor : x.Valor * -1,
+                    Valor = x.Valor,
                     Tipo = x.Tipo,
                     Descricao = x.Descricao,
                     RealizadoEm = x.RealizadoEm
                 }));
+    
+    private static readonly Func<AppDbContext, int, Task<Cliente?>> GetCliente
+        = EF.CompileAsyncQuery(
+            (AppDbContext context, int id) => context.Clientes
+                .AsNoTracking()
+                .SingleOrDefault(x => x.Id == id));
 
     [HttpGet("{id:int}/extrato")]
     public async Task<IActionResult> Extrato(int id)
@@ -63,34 +69,32 @@ public class ClienteController : ControllerBase
     public async Task<IActionResult> Post(int id, TransacaoRequestDto transacao)
     {
         var valorTransacao = transacao.Tipo == 'c' ? transacao.Valor : transacao.Valor * -1;
-
-        using var dbTransaction = await _context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
-        
-        var cliente = await _context.Clientes.FromSql($"SELECT * FROM \"Clientes\" WHERE \"Id\" = {id} FOR UPDATE")
-            .SingleOrDefaultAsync();
+        var cliente = await GetCliente(_context, id);
         if (cliente is null)
             return NotFound();
-        cliente.SaldoInicial += valorTransacao;
 
-        if (transacao.Tipo == 'd' && cliente.SaldoInicial * -1 > cliente.Limite)
-        {
-            return UnprocessableEntity("Limite excedido");
-        }
+        using var dbTransaction = await _context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
 
         _context.Transacaos.Add(new Transacao
         {
-            Valor = valorTransacao,
+            Valor = transacao.Valor,
             Tipo = transacao.Tipo,
             Descricao = transacao.Descricao,
             ClienteId = id
         });
+        var result = await _context.Clientes
+            .Where(x => x.Id == id)
+            .Where(x => x.SaldoInicial + valorTransacao >= x.Limite * -1 || valorTransacao > 0)
+            .ExecuteUpdateAsync(x =>
+                x.SetProperty(e => e.SaldoInicial, e => e.SaldoInicial + valorTransacao));
+
+        if (result == 0)
+        {
+            return UnprocessableEntity("Limite excedido");
+        }
         await _context.SaveChangesAsync();
         await dbTransaction.CommitAsync();
-
-        return Ok(new
-        {
-            cliente.Limite,
-            Saldo = cliente.SaldoInicial
-        });
+        cliente = await GetCliente(_context, id);
+        return Ok(new ResultadoSaldo(cliente.SaldoInicial, cliente.Limite));
     }
 }

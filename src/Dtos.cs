@@ -15,11 +15,13 @@ public record SaldoDto
     public int Limite { get; set; }
 }
 
-public record TransacaoDto
+public record struct ResultadoSaldo(int Saldo, int Limite);
+
+public record struct TransacaoDto
 {
     public int Valor { get; set; }
     public char Tipo { get; set; }
-    public string Descricao { get; set; } = "";
+    public string Descricao { get; set; }
     public DateTime RealizadoEm { get; set; }
 }
 
