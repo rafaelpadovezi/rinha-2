@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Rinha;
+﻿namespace Rinha;
 
 public record ExtratoDto
 {
@@ -27,11 +25,7 @@ public record struct TransacaoDto
 
 public record struct TransacaoRequestDto
 {
-    [Range(1, int.MaxValue)]
-    public int Valor { get; set; }
-    [AllowedValues('c', 'd')]
+    public object Valor { get; set; }
     public char Tipo { get; set; }
-    [Required]
-    [MaxLength(10)]
     public string Descricao { get; set; }
 }

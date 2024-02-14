@@ -5,14 +5,15 @@ services:
     hostname: api1
     build: ./src
     depends_on: 
-      - db
+      db:
+        condition: service_healthy
     environment:
       ConnectionStrings__AppDbContext: Host=db;Username=postgres;Password=postgres;Database=rinha
     deploy:
       resources:
         limits:
-          cpus: "0.4"
-          memory: "200MB"
+          cpus: "0.42"
+          memory: "175MB"
   
   api2:
     <<: *api1
@@ -33,6 +34,7 @@ services:
       DOTNETMONITOR_Urls: http://+:52323
       DOTNETMONITOR_DiagnosticPort__ConnectionMode: listen
       DOTNETMONITOR_DiagnosticPort__EndpointName: /diag/dotnet-monitor2.sock
+      DOTNETMONITOR_Metrics__Providers__0__ProviderName: "Microsoft.EntityFrameworkCore"
     command: [ "collect", "--no-auth" ]
     volumes:
       - "./diag:/diag"
@@ -56,8 +58,20 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: "130MB"
+          memory: "180MB"
     command: postgres -c max_connections=300
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "--dbname=rinha",
+          "--username=postgres"
+        ]
+      interval: 2s
+      timeout: 1m
+      retries: 5
+      start_period: 10s
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter
     ports:
@@ -77,7 +91,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.2"
+          cpus: "0.16"
           memory: "20MB"
           
   prometheus:
