@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+﻿FROM mcr.microsoft.com/dotnet/runtime:8.0-jammy-chiseled AS base
 USER $APP_UID
 WORKDIR /app
 
@@ -12,7 +12,7 @@ RUN dotnet build "Rinha.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish -r linux-x64 "Rinha.csproj" -c $BUILD_CONFIGURATION -o /app/publish
+RUN dotnet publish -r linux-x64 "Rinha.csproj" -c $BUILD_CONFIGURATION -o /app/publish --self-contained
 
 FROM base AS final
 WORKDIR /app

@@ -26,7 +26,6 @@
     "fiscalYearStartMonth": 0,
     "gnetId": 19297,
     "graphTooltip": 0,
-    "id": 1,
     "links": [],
     "liveNow": false,
     "panels": [
@@ -99,7 +98,8 @@
                             }
                         ]
                     },
-                    "unit": "decbytes"
+                    "unit": "decbytes",
+                    "unitScale": true
                 },
                 "overrides": []
             },
@@ -211,7 +211,8 @@
                             }
                         ]
                     },
-                    "unit": "percent"
+                    "unit": "percent",
+                    "unitScale": true
                 },
                 "overrides": []
             },
@@ -321,7 +322,8 @@
                                 "value": 80
                             }
                         ]
-                    }
+                    },
+                    "unitScale": true
                 },
                 "overrides": []
             },
@@ -417,7 +419,8 @@
                                 "value": 80
                             }
                         ]
-                    }
+                    },
+                    "unitScale": true
                 },
                 "overrides": []
             },
@@ -468,6 +471,7 @@
                         "mode": "palette-classic"
                     },
                     "custom": {
+                        "axisBorderShow": false,
                         "axisCenteredZero": false,
                         "axisColorMode": "text",
                         "axisLabel": "",
@@ -481,6 +485,7 @@
                             "tooltip": false,
                             "viz": false
                         },
+                        "insertNulls": false,
                         "lineInterpolation": "linear",
                         "lineWidth": 1,
                         "pointSize": 5,
@@ -502,14 +507,16 @@
                         "mode": "absolute",
                         "steps": [
                             {
-                                "color": "green"
+                                "color": "green",
+                                "value": null
                             },
                             {
                                 "color": "red",
                                 "value": 80
                             }
                         ]
-                    }
+                    },
+                    "unitScale": true
                 },
                 "overrides": []
             },
@@ -563,6 +570,107 @@
             "type": "timeseries"
         },
         {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unitScale": true
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 17
+            },
+            "id": 14,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "disableTextWrap": false,
+                    "editorMode": "builder",
+                    "expr": "systemruntime_time_in_jit_ms",
+                    "format": "time_series",
+                    "fullMetaSearch": false,
+                    "includeNullMetadata": true,
+                    "instant": false,
+                    "legendFormat": "",
+                    "range": true,
+                    "refId": "A",
+                    "useBackend": false
+                }
+            ],
+            "title": "Time In JIT",
+            "type": "timeseries"
+        },
+        {
             "collapsed": false,
             "gridPos": {
                 "h": 1,
@@ -586,6 +694,7 @@
                         "mode": "palette-classic"
                     },
                     "custom": {
+                        "axisBorderShow": false,
                         "axisCenteredZero": false,
                         "axisColorMode": "text",
                         "axisLabel": "",
@@ -599,6 +708,7 @@
                             "tooltip": false,
                             "viz": false
                         },
+                        "insertNulls": false,
                         "lineInterpolation": "linear",
                         "lineWidth": 1,
                         "pointSize": 5,
@@ -620,7 +730,8 @@
                         "mode": "absolute",
                         "steps": [
                             {
-                                "color": "green"
+                                "color": "green",
+                                "value": null
                             },
                             {
                                 "color": "red",
@@ -628,7 +739,8 @@
                             }
                         ]
                     },
-                    "unit": "decbytes"
+                    "unit": "decbytes",
+                    "unitScale": true
                 },
                 "overrides": []
             },
@@ -733,6 +845,7 @@
                         "mode": "fixed"
                     },
                     "custom": {
+                        "axisBorderShow": false,
                         "axisCenteredZero": false,
                         "axisColorMode": "text",
                         "axisLabel": "",
@@ -746,6 +859,7 @@
                             "tooltip": false,
                             "viz": false
                         },
+                        "insertNulls": false,
                         "lineInterpolation": "linear",
                         "lineWidth": 1,
                         "pointSize": 5,
@@ -767,7 +881,8 @@
                         "mode": "absolute",
                         "steps": [
                             {
-                                "color": "green"
+                                "color": "green",
+                                "value": null
                             },
                             {
                                 "color": "red",
@@ -775,7 +890,8 @@
                             }
                         ]
                     },
-                    "unit": "decbytes"
+                    "unit": "decbytes",
+                    "unitScale": true
                 },
                 "overrides": []
             },
@@ -1153,13 +1269,13 @@
     ],
     "refresh": "30s",
     "revision": 1,
-    "schemaVersion": 38,
+    "schemaVersion": 39,
     "tags": [],
     "templating": {
         "list": []
     },
     "time": {
-        "from": "now-3h",
+        "from": "now-5m",
         "to": "now"
     },
     "timepicker": {},

@@ -8,11 +8,7 @@ using Rinha;
 using Rinha.CompiledModels;
 
 var builder = WebApplication.CreateSlimBuilder(args);
-builder.Services.AddHttpLogging(o =>
-{
-    o.CombineLogs = true;
-    o.LoggingFields = HttpLoggingFields.All;
-});
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
@@ -21,14 +17,17 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 var options = new DbContextOptionsBuilder<AppDbContext>()
     .UseNpgsql(builder.Configuration.GetConnectionString("AppDbContext"))
     .EnableThreadSafetyChecks(false)
-    .UseModel(AppDbContextModel.Instance)
     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+    .UseModel(AppDbContextModel.Instance)
     .Options;
 var pooledDbContextFactory = new PooledDbContextFactory<AppDbContext>(options); 
 
 var app = builder.Build();
 
-app.UseHttpLogging();
+using (var context = pooledDbContextFactory.CreateDbContext())
+{
+    await AppDbContext.EfCustomWarmUp(context);
+}
 
 app.MapGet("/", () => Results.Ok(new { Message = "It's up" }));
 
@@ -64,18 +63,13 @@ app.MapPost("/clientes/{id:int}/transacoes", async (int id, TransacaoRequestDto 
     var valorTransacao = transacao.Tipo == 'c' ? valor : valor * -1;
 
     await using var dbTransaction = await context.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
-    var result = await context.Clientes
-        .Where(x => x.Id == id)
-        .Where(x => x.SaldoInicial + valorTransacao >= x.Limite * -1 || valorTransacao > 0)
-        .ExecuteUpdateAsync(x =>
-            x.SetProperty(e => e.SaldoInicial, e => e.SaldoInicial + valorTransacao));
+    var updated = await AppDbContext.TryUpdateSaldoCliente(context, id, valorTransacao);
 
     var cliente = await AppDbContext.GetCliente(context, id);
     if (cliente is null)
         return Results.NotFound();
-    if (result == 0)
+    if (!updated)
         return Results.UnprocessableEntity("Limite excedido");
-
     context.Transacaos.Add(new Transacao
     {
         Valor = valor,

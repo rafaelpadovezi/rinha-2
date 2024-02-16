@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.EntityFrameworkCore;
 
 namespace Rinha;
 
@@ -7,7 +8,7 @@ public record Cliente
     public int Id { get; set; }
     public int Limite { get; set; }
     public int SaldoInicial { get; set; }
-    public List<Transacao> Transacoes { get; set; } = [];
+    public List<Transacao> Transacoes { get; set; }
 }
 
 public record Transacao
@@ -17,9 +18,10 @@ public record Transacao
     public int ClienteId { get; set; }
     public char Tipo { get; set; }
     public string Descricao { get; set; } = "";
-    public DateTime RealizadoEm { get; set; } = DateTime.UtcNow;
+    public DateTime RealizadoEm { get; set; }
 }
 
+[RequiresUnreferencedCode("Not compatible with trimming")]
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
@@ -57,4 +59,40 @@ public class AppDbContext : DbContext
             (AppDbContext context, int id) => context.Clientes
                 .AsNoTracking()
                 .SingleOrDefault(x => x.Id == id));
+    
+    public static async Task<bool> TryUpdateSaldoCliente(AppDbContext context, int id, int valorTransacao)
+    {
+        var result = await context.Clientes
+            .Where(x => x.Id == id)
+            .Where(x => x.SaldoInicial + valorTransacao >= x.Limite * -1 || valorTransacao > 0)
+            .ExecuteUpdateAsync(x =>
+                x.SetProperty(e => e.SaldoInicial, e => e.SaldoInicial + valorTransacao));
+        return result > 0;
+    }
+    
+    /// <summary>
+    /// Executa algumas queries para garantir a inicialização do EF Core.
+    ///
+    /// A primeira execução de algumas funcionalides do EF Core pode ser lenta. Compiled queries
+    /// ajuda otimizar mas tem suporte limitado.
+    /// </summary>
+    /// <param name="appDbContext"></param>
+    public static async Task EfCustomWarmUp(AppDbContext appDbContext)
+    {
+        try
+        {
+            await TryUpdateSaldoCliente(appDbContext, 0, 1);
+            await appDbContext.AddAsync(new Transacao
+            {
+                ClienteId = 0,
+                Descricao = "Teste",
+                Tipo = 'c',
+                Valor = 100
+            });
+            await appDbContext.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+        }
+    }
 }

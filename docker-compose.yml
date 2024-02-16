@@ -8,24 +8,25 @@ services:
       db:
         condition: service_healthy
     environment:
-      ConnectionStrings__AppDbContext: Host=db;Username=postgres;Password=postgres;Database=rinha
+      ConnectionStrings__AppDbContext: Host=db;Username=postgres;Password=postgres;Database=rinha;No Reset On Close=true;Max Auto Prepare=10;Auto Prepare Min Usages=1;Pooling=true;Maximum Pool Size=30;
     deploy:
       resources:
         limits:
           cpus: "0.42"
-          memory: "175MB"
+          memory: "165MB"
   
   api2:
     <<: *api1
+    user: root
     hostname: api2
     depends_on:
-      - db
-      - monitor2
+      db:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__AppDbContext: Host=db;Username=postgres;Password=postgres;Database=rinha;No Reset On Close=true;Max Auto Prepare=10;Auto Prepare Min Usages=1;Pooling=true;Maximum Pool Size=30;
+      DOTNET_DiagnosticPorts: /diag/dotnet-monitor2.sock
     volumes:
       - "./diag:/diag"
-    environment:
-      ConnectionStrings__AppDbContext: Host=db;Username=postgres;Password=postgres;Database=rinha
-      DOTNET_DiagnosticPorts: /diag/dotnet-monitor2.sock
   monitor2:
     image: mcr.microsoft.com/dotnet/monitor:8
     environment:
@@ -34,7 +35,8 @@ services:
       DOTNETMONITOR_Urls: http://+:52323
       DOTNETMONITOR_DiagnosticPort__ConnectionMode: listen
       DOTNETMONITOR_DiagnosticPort__EndpointName: /diag/dotnet-monitor2.sock
-      DOTNETMONITOR_Metrics__Providers__0__ProviderName: "Microsoft.EntityFrameworkCore"
+      DOTNETMONITOR_Metrics__Providers__0__ProviderName: Npgsql
+      DOTNETMONITOR_Metrics__Providers__1__ProviderName: Microsoft.EntityFrameworkCore
     command: [ "collect", "--no-auth" ]
     volumes:
       - "./diag:/diag"
@@ -58,8 +60,8 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: "180MB"
-    command: postgres -c max_connections=300
+          memory: "200MB"
+    command: postgres -c max_connections=100
     healthcheck:
       test:
         [
@@ -83,7 +85,7 @@ services:
     image: nginx
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on: 
+    depends_on:
       - api1
       - api2
     ports:
@@ -93,7 +95,6 @@ services:
         limits:
           cpus: "0.16"
           memory: "20MB"
-          
   prometheus:
     image: prom/prometheus
     ports:
@@ -107,19 +108,26 @@ services:
       retries: 10
       start_period: 40s
   grafana:
-    image: grafana/grafana-oss
+      image: grafana/grafana-oss
+      ports:
+        - "3000:3000"
+      volumes:
+        # https://grafana.com/docs/grafana/latest/administration/provisioning/
+        - "./grafana/provisioning/:/etc/grafana/provisioning/"
+        - "./grafana/dashboards/:/var/lib/grafana/dashboards/"
+      depends_on:
+        prometheus:
+          condition: service_healthy
+      healthcheck:
+        test: [ "CMD", "grafana-cli", "plugins", "ls" ]
+        interval: 30s
+        timeout: 10s
+        retries: 3
+        start_period: 20s
+  pgadmin:
+    image: dpage/pgadmin4
     ports:
-      - "3000:3000"
-    volumes:
-      # https://grafana.com/docs/grafana/latest/administration/provisioning/
-      - "./grafana/provisioning/:/etc/grafana/provisioning/"
-      - "./grafana/dashboards/:/var/lib/grafana/dashboards/"
-    depends_on:
-      prometheus:
-        condition: service_healthy
-    healthcheck:
-      test: [ "CMD", "grafana-cli", "plugins", "ls" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "rafaelpadovezi@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
